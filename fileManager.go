@@ -38,7 +38,7 @@ func fileRead() (*Request, error) {
 }
 
 func fileWrite(request *Request) error {
-	fileName := fileWriteName + "_" + time.Now().Format("02-01-2006") + fileExtension
+	fileName := fileWriteName + "_" + time.Now().Format("02-01-2006_15-04-05") + fileExtension
 	file, err := os.OpenFile(fileName, os.O_CREATE, 0777)
 	if err != nil {
 		return err
