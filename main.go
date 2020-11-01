@@ -23,6 +23,7 @@ func main() {
 			"title":       "File read error",
 			"stack_trace": string(debug.Stack()),
 		}).Error(err)
+		time.Sleep(time.Second * 5)
 		return
 	}
 

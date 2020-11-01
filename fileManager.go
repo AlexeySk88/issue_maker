@@ -53,6 +53,7 @@ func fileWrite(request *Request) error {
 		return err
 	}
 
+	fmt.Printf("Файл с именем %s создан\n", fileName)
 	return nil
 }
 
