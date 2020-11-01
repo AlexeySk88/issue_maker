@@ -11,6 +11,7 @@ import (
 const fileReadName = "issues"
 const fileWriteName = "done"
 const fileExtension = ".yaml"
+const fileLog = "issue_maker.log"
 
 func fileRead() (*Request, error) {
 	fileName := fileReadName + fileExtension
@@ -53,4 +54,8 @@ func fileWrite(request *Request) error {
 	}
 
 	return nil
+}
+
+func getFileLog() (*os.File, error) {
+	return os.OpenFile(fileLog, os.O_CREATE|os.O_WRONLY|os.O_APPEND, 0666)
 }
