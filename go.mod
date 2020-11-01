@@ -1,0 +1,8 @@
+module issue_maker
+
+go 1.15
+
+require (
+	github.com/gookit/color v1.3.1
+	gopkg.in/yaml.v2 v2.3.0
+)
