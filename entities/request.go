@@ -2,6 +2,7 @@ package entities
 
 import (
 	"fmt"
+	"issue_maker/helpers"
 	"strconv"
 	"strings"
 )
@@ -60,7 +61,8 @@ func (r *Request) RequestParam(index int) string {
 	issue.labelsParam(&params)
 	issue.weightParam(&params)
 	r.milestoneIdParam(index, &params)
-	return strings.Join(params, "&")
+	param := strings.Join(params, "&")
+	return helpers.ReplaceForRestParam(param)
 }
 
 func getMilestone(key string, m map[string]int) (int, error) {
@@ -71,24 +73,24 @@ func getMilestone(key string, m map[string]int) (int, error) {
 	if val, ok := m[key]; ok {
 		return val, nil
 	}
-	return 0, fmt.Errorf("не найдет milestone с именем %s", key)
+	return 0, fmt.Errorf("не найден milestone с именем %s", key)
 }
 
 func (i *Issue) titleParam(params *[]string) {
 	if len(i.Title) > 0 {
-		*params = append(*params, "title="+strings.ReplaceAll(i.Title, " ", "%20"))
+		*params = append(*params, "title="+i.Title)
 	}
 }
 
 func (i *Issue) descriptionParam(params *[]string) {
 	if len(i.Description) > 0 {
-		*params = append(*params, "description="+strings.ReplaceAll(i.Description, " ", "%20"))
+		*params = append(*params, "description="+i.Description)
 	}
 }
 
 func (i *Issue) labelsParam(params *[]string) {
 	if len(i.Labels) > 0 {
-		*params = append(*params, "labels="+strings.ReplaceAll(strings.Join(i.Labels, ","), " ", "%20"))
+		*params = append(*params, "labels="+strings.Join(i.Labels, ","))
 	}
 }
 

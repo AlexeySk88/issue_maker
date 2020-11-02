@@ -25,7 +25,7 @@ func CheckRequest(request *entities.Request) error {
 	}
 
 	success := []string{"y", "yes", "д", "да"}
-	if !helpers.Contains(success, strings.TrimSpace(strings.ToLower(userResponse))) {
+	if !helpers.ArrayContains(success, strings.TrimSpace(strings.ToLower(userResponse))) {
 		return fmt.Errorf("прекращено пользователем, запись в gitlab не совершена")
 	}
 	return nil
