@@ -2,23 +2,24 @@ package main
 
 import (
 	log "github.com/sirupsen/logrus"
+	"issue_maker/managers"
 	"os"
 	"runtime/debug"
 	"time"
 )
 
 func main() {
-	logFile, err := getFileLog()
+	logFile, err := managers.GetFileLog()
 	if err != nil {
-		errorConsole.Println(err)
+		managers.ErrorConsole.Println(err)
 		time.Sleep(time.Second * 5)
 		return
 	}
 
 	initLogs(logFile)
-	req, err := fileRead()
+	req, err := managers.FileRead()
 	if err != nil {
-		errorConsole.Println(err)
+		managers.ErrorConsole.Println(err)
 		log.WithFields(log.Fields{
 			"title":       "File read error",
 			"stack_trace": string(debug.Stack()),
@@ -27,9 +28,9 @@ func main() {
 		return
 	}
 
-	milestones, err := getMilestones(req)
+	milestones, err := managers.GetMilestones(req)
 	if err != nil {
-		errorConsole.Println(err)
+		managers.ErrorConsole.Println(err)
 		log.WithFields(log.Fields{
 			"title":       "Milestones get error",
 			"stack_trace": string(debug.Stack()),
@@ -37,8 +38,8 @@ func main() {
 		return
 	}
 
-	if err = req.updateMilestone(milestones); err != nil {
-		errorConsole.Println(err)
+	if err = req.UpdateMilestone(milestones); err != nil {
+		managers.ErrorConsole.Println(err)
 		log.WithFields(log.Fields{
 			"title":       "Update issues error",
 			"stack_trace": string(debug.Stack()),
@@ -46,24 +47,24 @@ func main() {
 		return
 	}
 
-	if err = checkRequest(req); err != nil {
-		errorConsole.Println(err)
+	if err = managers.CheckRequest(req); err != nil {
+		managers.ErrorConsole.Println(err)
 		time.Sleep(time.Second * 5)
 		return
 	}
 
-	req, err = send(req)
+	req, err = managers.Send(req)
 	if err != nil {
-		errorConsole.Println(err)
+		managers.ErrorConsole.Println(err)
 		log.WithFields(log.Fields{
-			"title":       "Gitlab send error",
+			"title":       "Gitlab Send error",
 			"stack_trace": string(debug.Stack()),
 		}).Error(err)
 		return
 	}
 
-	if err = fileWrite(req); err != nil {
-		errorConsole.Println(err)
+	if err = managers.FileWrite(req); err != nil {
+		managers.ErrorConsole.Println(err)
 		log.WithFields(log.Fields{
 			"title":       "File write error",
 			"stack_trace": string(debug.Stack()),

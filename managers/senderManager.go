@@ -1,14 +1,15 @@
-package main
+package managers
 
 import (
 	"encoding/json"
 	"fmt"
+	"issue_maker/entities"
 	"net/http"
 )
 
 const baseUrl string = "https://gitlab.com/api/v4/projects"
 
-func getMilestones(request *Request) (*[]Milestone, error) {
+func GetMilestones(request *entities.Request) (*[]entities.Milestone, error) {
 	client := http.Client{}
 	url := fmt.Sprintf(
 		"%s/%d/milestones",
@@ -33,8 +34,8 @@ func getMilestones(request *Request) (*[]Milestone, error) {
 	return responseMilestoneHandler(resp)
 }
 
-func send(request *Request) (*Request, error) {
-	newReq := Request{
+func Send(request *entities.Request) (*entities.Request, error) {
+	newReq := entities.Request{
 		AccessToken: request.AccessToken,
 		ProjectId:   request.ProjectId,
 		Milestone:   request.Milestone,
@@ -42,12 +43,12 @@ func send(request *Request) (*Request, error) {
 	client := http.Client{}
 	for index, issue := range request.Issues {
 		var req *http.Request
-		if issue.isCreate() {
+		if issue.IsCreate() {
 			req = create(request, index)
-		} else if issue.isUpdate() {
+		} else if issue.IsUpdate() {
 			req = update(request, index)
 		} else {
-			errorConsole.Printf("Задача с заголовком %s не будет отправлена в gitlab\n", issue.Title)
+			ErrorConsole.Printf("Задача с заголовком %s не будет отправлена в gitlab\n", issue.Title)
 			continue
 		}
 		fmt.Printf("Записываю в gitlab задачу с заголовком: %s\n", issue.Title)
@@ -71,48 +72,48 @@ func send(request *Request) (*Request, error) {
 	return &newReq, nil
 }
 
-func create(request *Request, index int) *http.Request {
+func create(request *entities.Request, index int) *http.Request {
 	url := fmt.Sprintf(
 		"%s/%d/issues?%s",
 		baseUrl,
 		request.ProjectId,
-		request.requestParam(index))
+		request.RequestParam(index))
 	req, err := http.NewRequest("POST", url, nil)
 	if err != nil {
-		errorConsole.Println(err)
+		ErrorConsole.Println(err)
 	}
 	return req
 }
 
-func update(request *Request, index int) *http.Request {
+func update(request *entities.Request, index int) *http.Request {
 	url := fmt.Sprintf(
 		"%s/%d/issues/%d?%s",
 		baseUrl,
 		request.ProjectId,
 		request.Issues[index].Id,
-		request.requestParam(index),
+		request.RequestParam(index),
 	)
 	req, err := http.NewRequest("PUT", url, nil)
 	if err != nil {
-		errorConsole.Println(err)
+		ErrorConsole.Println(err)
 	}
 	return req
 }
 
-func responseCreateHandler(resp *http.Response, i *Issue) *Issue {
-	r := Response{}
+func responseCreateHandler(resp *http.Response, i *entities.Issue) *entities.Issue {
+	r := entities.Response{}
 	defer resp.Body.Close()
 	err := json.NewDecoder(resp.Body).Decode(&r)
 	if err != nil {
-		errorConsole.Println(err)
+		ErrorConsole.Println(err)
 		return nil
 	}
 
-	return i.copyForWrite(r.Iid)
+	return i.CopyForWrite(r.Iid)
 }
 
-func responseMilestoneHandler(resp *http.Response) (*[]Milestone, error) {
-	var m []Milestone
+func responseMilestoneHandler(resp *http.Response) (*[]entities.Milestone, error) {
+	var m []entities.Milestone
 	defer resp.Body.Close()
 	if err := json.NewDecoder(resp.Body).Decode(&m); err != nil {
 		return nil, err

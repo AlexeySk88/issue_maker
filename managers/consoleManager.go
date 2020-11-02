@@ -1,8 +1,10 @@
-package main
+package managers
 
 import (
 	"fmt"
 	"github.com/gookit/color"
+	"issue_maker/entities"
+	"issue_maker/helpers"
 	"os"
 	"strings"
 )
@@ -10,11 +12,11 @@ import (
 const createMessage = "\t* создана новая задача с заголовком:"
 const updateMessage = "\t* обновлена задача с заголовком:"
 
-var errorConsole = color.New(color.FgRed)
-var infoConsole = color.New(color.FgGreen)
-var warnConsole = color.New(color.FgYellow)
+var ErrorConsole = color.New(color.FgRed)
+var InfoConsole = color.New(color.FgGreen)
+var WarnConsole = color.New(color.FgYellow)
 
-func checkRequest(request *Request) error {
+func CheckRequest(request *entities.Request) error {
 	doPrint(request)
 	fmt.Print("Начать запись в gitlab? (y/n): ")
 	var userResponse string
@@ -23,20 +25,20 @@ func checkRequest(request *Request) error {
 	}
 
 	success := []string{"y", "yes", "д", "да"}
-	if !contains(success, strings.TrimSpace(strings.ToLower(userResponse))) {
+	if !helpers.Contains(success, strings.TrimSpace(strings.ToLower(userResponse))) {
 		return fmt.Errorf("прекращено пользователем, запись в gitlab не совершена")
 	}
 	return nil
 }
 
-func doPrint(request *Request) {
+func doPrint(request *entities.Request) {
 	var create []string
 	var update []string
 	var unknown []string
 	for _, i := range request.Issues {
-		if i.isCreate() {
+		if i.IsCreate() {
 			create = append(create, fmt.Sprintf("%s %s", createMessage, i.Title))
-		} else if i.isUpdate() {
+		} else if i.IsUpdate() {
 			update = append(update, fmt.Sprintf("%s %s", updateMessage, i.Title))
 		} else {
 			unknown = append(unknown, fmt.Sprintf("* задача с заголовком %s не может быть отправлена в gitlab", i.Title))
@@ -45,12 +47,12 @@ func doPrint(request *Request) {
 
 	fmt.Println("Будут выполнены следующие действия:")
 	for _, c := range create {
-		infoConsole.Println(c)
+		InfoConsole.Println(c)
 	}
 	for _, u := range update {
-		warnConsole.Println(u)
+		WarnConsole.Println(u)
 	}
 	for _, u := range unknown {
-		errorConsole.Println(u)
+		ErrorConsole.Println(u)
 	}
 }

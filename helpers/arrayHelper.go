@@ -1,6 +1,6 @@
-package main
+package helpers
 
-func contains(array []string, value interface{}) bool {
+func Contains(array []string, value interface{}) bool {
 	for _, a := range array {
 		if a == value {
 			return true

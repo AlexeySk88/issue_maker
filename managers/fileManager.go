@@ -1,9 +1,10 @@
-package main
+package managers
 
 import (
 	"fmt"
 	"gopkg.in/yaml.v2"
 	"io/ioutil"
+	"issue_maker/entities"
 	"os"
 	"time"
 )
@@ -13,7 +14,7 @@ const fileWriteName = "done"
 const fileExtension = ".yaml"
 const fileLog = "issue_maker.log"
 
-func fileRead() (*Request, error) {
+func FileRead() (*entities.Request, error) {
 	fileName := fileReadName + fileExtension
 	if _, err := os.Stat(fileName); err != nil {
 		return nil, fmt.Errorf("файла %s в директории с проектом не найдено", fileName)
@@ -24,13 +25,13 @@ func fileRead() (*Request, error) {
 		return nil, err
 	}
 
-	r := Request{}
+	r := entities.Request{}
 	err = yaml.Unmarshal(data, &r)
 	if err != nil {
 		return nil, err
 	}
 
-	err = r.validation()
+	err = r.Validation()
 	if err != nil {
 		return nil, err
 	}
@@ -38,7 +39,7 @@ func fileRead() (*Request, error) {
 	return &r, nil
 }
 
-func fileWrite(request *Request) error {
+func FileWrite(request *entities.Request) error {
 	fileName := fileWriteName + "_" + time.Now().Format("02-01-2006_15-04-05") + fileExtension
 	file, err := os.OpenFile(fileName, os.O_CREATE, 0777)
 	if err != nil {
@@ -57,6 +58,6 @@ func fileWrite(request *Request) error {
 	return nil
 }
 
-func getFileLog() (*os.File, error) {
+func GetFileLog() (*os.File, error) {
 	return os.OpenFile(fileLog, os.O_CREATE|os.O_WRONLY|os.O_APPEND, 0666)
 }

@@ -1,4 +1,4 @@
-package main
+package entities
 
 type Milestone struct {
 	Id    int
