@@ -63,15 +63,6 @@ func (r *Request) RequestParam(index int) string {
 	return strings.Join(params, "&")
 }
 
-func (r *Request) milestoneIdParam(index int, params *[]string) {
-	baseStr := "milestone_id="
-	if r.Issues[index].milestoneIid != 0 {
-		*params = append(*params, baseStr+strconv.Itoa(r.Issues[index].milestoneIid))
-	} else if r.milestoneIid != 0 {
-		*params = append(*params, baseStr+strconv.Itoa(r.milestoneIid))
-	}
-}
-
 func getMilestone(key string, m map[string]int) (int, error) {
 	if len(key) == 0 {
 		return 0, nil
@@ -104,6 +95,15 @@ func (i *Issue) labelsParam(params *[]string) {
 func (i *Issue) weightParam(params *[]string) {
 	if i.Weight != 0 {
 		*params = append(*params, "weight="+strconv.Itoa(i.Weight))
+	}
+}
+
+func (r *Request) milestoneIdParam(index int, params *[]string) {
+	baseStr := "milestone_id="
+	if r.Issues[index].milestoneIid != 0 {
+		*params = append(*params, baseStr+strconv.Itoa(r.Issues[index].milestoneIid))
+	} else if r.milestoneIid != 0 {
+		*params = append(*params, baseStr+strconv.Itoa(r.milestoneIid))
 	}
 }
 
