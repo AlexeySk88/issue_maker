@@ -55,14 +55,13 @@ func (r *Request) Validation() error {
 
 func (r *Request) RequestParam(index int) string {
 	issue := r.Issues[index]
-	var params []string
+	params := make(map[string]string)
 	issue.titleParam(&params)
 	issue.descriptionParam(&params)
 	issue.labelsParam(&params)
 	issue.weightParam(&params)
 	r.milestoneIdParam(index, &params)
-	param := strings.Join(params, "&")
-	return helpers.ReplaceForRestParam(param)
+	return helpers.ReplaceForRestParam(&params)
 }
 
 func getMilestone(key string, m map[string]int) (int, error) {
@@ -76,36 +75,35 @@ func getMilestone(key string, m map[string]int) (int, error) {
 	return 0, fmt.Errorf("не найден milestone с именем %s", key)
 }
 
-func (i *Issue) titleParam(params *[]string) {
+func (i *Issue) titleParam(params *map[string]string) {
 	if len(i.Title) > 0 {
-		*params = append(*params, "title="+i.Title)
+		(*params)["title"] = i.Title
 	}
 }
 
-func (i *Issue) descriptionParam(params *[]string) {
+func (i *Issue) descriptionParam(params *map[string]string) {
 	if len(i.Description) > 0 {
-		*params = append(*params, "description="+i.Description)
+		(*params)["description"] = i.Description
 	}
 }
 
-func (i *Issue) labelsParam(params *[]string) {
+func (i *Issue) labelsParam(params *map[string]string) {
 	if len(i.Labels) > 0 {
-		*params = append(*params, "labels="+strings.Join(i.Labels, ","))
+		(*params)["labels"] = strings.Join(i.Labels, helpers.GetLabelsSeparator())
 	}
 }
 
-func (i *Issue) weightParam(params *[]string) {
+func (i *Issue) weightParam(params *map[string]string) {
 	if i.Weight != 0 {
-		*params = append(*params, "weight="+strconv.Itoa(i.Weight))
+		(*params)["weight"] = strconv.Itoa(i.Weight)
 	}
 }
 
-func (r *Request) milestoneIdParam(index int, params *[]string) {
-	baseStr := "milestone_id="
+func (r *Request) milestoneIdParam(index int, params *map[string]string) {
 	if r.Issues[index].milestoneIid != 0 {
-		*params = append(*params, baseStr+strconv.Itoa(r.Issues[index].milestoneIid))
+		(*params)["milestone_id"] = strconv.Itoa(r.Issues[index].milestoneIid)
 	} else if r.milestoneIid != 0 {
-		*params = append(*params, baseStr+strconv.Itoa(r.milestoneIid))
+		(*params)["milestone_id"] = strconv.Itoa(r.milestoneIid)
 	}
 }
 

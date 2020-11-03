@@ -77,7 +77,8 @@ func create(request *entities.Request, index int) *http.Request {
 		"%s/%d/issues?%s",
 		baseUrl,
 		request.ProjectId,
-		request.RequestParam(index))
+		request.RequestParam(index),
+	)
 	req, err := http.NewRequest("POST", url, nil)
 	if err != nil {
 		ErrorConsole.Println(err)

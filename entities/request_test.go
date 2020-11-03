@@ -2,13 +2,11 @@ package entities
 
 import (
 	"issue_maker/helpers"
+	"strings"
 	"testing"
 )
 
 func TestRequestParam(t *testing.T) {
-	expectParam1 := "title=title%201&description=desc-1&labels=label%201&weight=1&milestone_id=123"
-	expectParam2 := "title=title-2&description=desc%202&labels=label%203,label%204&weight=2&milestone_id=321"
-
 	r := Request{
 		AccessToken:  "token",
 		milestoneIid: 123,
@@ -30,13 +28,21 @@ func TestRequestParam(t *testing.T) {
 	}
 
 	param := r.RequestParam(0)
-	if param != expectParam1 {
-		t.Errorf("TestRequestParam failed, expected %s, got %s", expectParam1, param)
+	if !strings.Contains(param, "labels=label+1") ||
+		!strings.Contains(param, "weight=1") ||
+		!strings.Contains(param, "milestone_id=123") ||
+		!strings.Contains(param, "title=title+1") ||
+		!strings.Contains(param, "description=desc-1") {
+		t.Errorf("TestRequestParam failed, got %s", param)
 	}
 
 	param = r.RequestParam(1)
-	if param != expectParam2 {
-		t.Errorf("TestRequestParam failed, expected %s, got %s", expectParam2, param)
+	if !strings.Contains(param, "title=title-2") ||
+		!strings.Contains(param, "description=desc+2") ||
+		!strings.Contains(param, "labels=label+3,label+4") ||
+		!strings.Contains(param, "weight=2") ||
+		!strings.Contains(param, "milestone_id=321") {
+		t.Errorf("TestRequestParam failed, got %s", param)
 	}
 }
 
@@ -63,7 +69,7 @@ func TestIsCreateAndIsUpdate(t *testing.T) {
 }
 
 func TestGetMilestone(t *testing.T) {
-	var params []string
+	params := make(map[string]string)
 	r := Request{
 		milestoneIid: 123,
 		Issues: []Issue{
@@ -75,76 +81,99 @@ func TestGetMilestone(t *testing.T) {
 			},
 		},
 	}
+
 	r.milestoneIdParam(0, &params)
-	r.milestoneIdParam(1, &params)
-
-	expect := "milestone_id=123"
-	if params[0] != expect {
-		t.Errorf("TestGetMilestone failed, expected %s, got %s", expect, params[0])
+	if _, ok := params["milestone_id"]; !ok {
+		t.Error("TestGetMilestone failed, params not contains milestone_id key")
 	}
+	expect := "123"
+	if params["milestone_id"] != expect {
+		t.Errorf("TestGetMilestone failed, expected %s, got %s", expect, params["milestone_id"])
+	}
+	delete(params, "milestone_id")
 
-	expect = "milestone_id=321"
-	if params[1] != expect {
-		t.Errorf("TestGetMilestone failed, expected %s, got %s", expect, params[1])
+	r.milestoneIdParam(1, &params)
+	if _, ok := params["milestone_id"]; !ok {
+		t.Error("TestGetMilestone failed, params not contains milestone_id key")
+	}
+	expect = "321"
+	if params["milestone_id"] != expect {
+		t.Errorf("TestGetMilestone failed, expected %s, got %s", expect, params["milestone_id"])
 	}
 }
 
 func TestTitleParam(t *testing.T) {
-	var params []string
+	params := make(map[string]string)
 	i := Issue{
 		Title: "title 1",
 	}
-	i.titleParam(&params)
 
-	expect := "title=title 1"
-	if params[0] != expect {
-		t.Errorf("TestTitleParam failed, expected %s, got %s", expect, params[0])
+	i.titleParam(&params)
+	if _, ok := params["title"]; !ok {
+		t.Error("TestGetMilestone failed, params not contains title key")
+	}
+	expect := "title 1"
+	if params["title"] != expect {
+		t.Errorf("TestTitleParam failed, expected %s, got %s", expect, params["title"])
 	}
 }
 
 func TestDescriptionParam(t *testing.T) {
-	var params []string
+	params := make(map[string]string)
 	i := Issue{
 		Description: "desc-1",
 	}
-	i.descriptionParam(&params)
 
-	expect := "description=desc-1"
-	if params[0] != expect {
-		t.Errorf("TestDescriptionParam failed, expected %s, got %s", expect, params[0])
+	i.descriptionParam(&params)
+	if _, ok := params["description"]; !ok {
+		t.Error("TestGetMilestone failed, params not contains description key")
+	}
+	expect := "desc-1"
+	if params["description"] != expect {
+		t.Errorf("TestDescriptionParam failed, expected %s, got %s", expect, params["description"])
 	}
 }
 
 func TestLabelsParam(t *testing.T) {
-	var params []string
+	params := make(map[string]string)
 	i := Issue{
 		Labels: []string{"label1"},
 	}
-	i.labelsParam(&params)
 
-	expect := "labels=label1"
-	if params[0] != expect {
-		t.Errorf("TestLabelsParam failed, expected %s, got %s", expect, params[0])
+	i.labelsParam(&params)
+	if _, ok := params["labels"]; !ok {
+		t.Error("TestGetMilestone failed, params not contains labels key")
 	}
+	expect := "label1"
+	if params["labels"] != expect {
+		t.Errorf("TestLabelsParam failed, expected %s, got %s", expect, params["labels"])
+	}
+	delete(params, "labels")
 
 	i.Labels = append(i.Labels, "label 2")
 	i.labelsParam(&params)
-	expect = "labels=label1,label 2"
-	if params[1] != expect {
-		t.Errorf("TestLabelsParam failed, expected %s, got %s", expect, params[1])
+	if _, ok := params["labels"]; !ok {
+		t.Error("TestGetMilestone failed, params not contains labels key")
+	}
+	expect = "label1,label 2"
+	if params["labels"] != expect {
+		t.Errorf("TestLabelsParam failed, expected %s, got %s", expect, params["labels"])
 	}
 }
 
 func TestWeightParam(t *testing.T) {
-	var params []string
+	params := make(map[string]string)
 	i := Issue{
 		Weight: 2,
 	}
-	i.weightParam(&params)
 
-	expect := "weight=2"
-	if params[0] != expect {
-		t.Errorf("TestWeightParam failed, expected %s, got %s", expect, params[0])
+	i.weightParam(&params)
+	if _, ok := params["weight"]; !ok {
+		t.Error("TestGetMilestone failed, params not contains weight key")
+	}
+	expect := "2"
+	if params["weight"] != expect {
+		t.Errorf("TestWeightParam failed, expected %s, got %s", expect, params["weight"])
 	}
 }
 
