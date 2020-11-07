@@ -61,3 +61,18 @@ func FileWrite(request *entities.Request) error {
 func GetFileLog() (*os.File, error) {
 	return os.OpenFile(fileLog, os.O_CREATE|os.O_WRONLY|os.O_APPEND, 0666)
 }
+
+func GetFile(str string) (*os.File, error) {
+	return os.Open(str)
+}
+
+func CheckExistFiles(arr []string) bool {
+	res := true
+	for _, s := range arr {
+		if _, err := os.Stat(s); err != nil {
+			ErrorConsole.Printf("Файл %s не найден", s)
+			res = false
+		}
+	}
+	return res
+}

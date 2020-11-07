@@ -1,9 +1,12 @@
 package managers
 
 import (
+	"bytes"
 	"encoding/json"
 	"fmt"
+	"io"
 	"issue_maker/entities"
+	"mime/multipart"
 	"net/http"
 )
 
@@ -42,6 +45,14 @@ func Send(request *entities.Request) (*entities.Request, error) {
 	}
 	client := http.Client{}
 	for index, issue := range request.Issues {
+		desc, err := descriptionUploadImage(issue.Description, request.ProjectId, request.AccessToken)
+		if err != nil {
+			return nil, err
+		}
+
+		issue.Description = desc
+		request.Issues[index] = issue
+
 		var req *http.Request
 		if issue.IsCreate() {
 			req = create(request, index)
@@ -70,6 +81,51 @@ func Send(request *entities.Request) (*entities.Request, error) {
 
 	fmt.Println("Задачи успешно записаны!")
 	return &newReq, nil
+}
+
+func uploadFile(path string, projectId int, accessToken string) (string, error) {
+	file, err := GetFile(path)
+	if err != nil {
+		return "", err
+	}
+
+	body := &bytes.Buffer{}
+	writer := multipart.NewWriter(body)
+	part, err := writer.CreateFormFile("file", path)
+	if err != nil {
+		return "", err
+	}
+
+	if _, err = io.Copy(part, file); err != nil {
+		return "", nil
+	}
+	if err = writer.Close(); err != nil {
+		return "", nil
+	}
+
+	url := fmt.Sprintf("%s/%d/uploads",
+		baseUrl,
+		projectId)
+	req, err := http.NewRequest("POST", url, body)
+	if err != nil {
+		return "", nil
+	}
+	req.Header.Add("PRIVATE-TOKEN", accessToken)
+	req.Header.Set("Content-Type", writer.FormDataContentType())
+
+	//TODO вынести клиента в настройки
+	client := http.Client{}
+	resp, err := client.Do(req)
+	if err != nil {
+		return "", nil
+	}
+
+	uploads, err := responseUploadsHandler(resp)
+	if err != nil {
+		return "", nil
+	}
+
+	return uploads.Markdown, nil
 }
 
 func create(request *entities.Request, index int) *http.Request {
@@ -104,8 +160,7 @@ func update(request *entities.Request, index int) *http.Request {
 func responseCreateHandler(resp *http.Response, i *entities.Issue) *entities.Issue {
 	r := entities.Response{}
 	defer resp.Body.Close()
-	err := json.NewDecoder(resp.Body).Decode(&r)
-	if err != nil {
+	if err := json.NewDecoder(resp.Body).Decode(&r); err != nil {
 		ErrorConsole.Println(err)
 		return nil
 	}
@@ -120,4 +175,14 @@ func responseMilestoneHandler(resp *http.Response) (*[]entities.Milestone, error
 		return nil, err
 	}
 	return &m, nil
+}
+
+func responseUploadsHandler(resp *http.Response) (*entities.Uploads, error) {
+	u := entities.Uploads{}
+	defer resp.Body.Close()
+	if err := json.NewDecoder(resp.Body).Decode(&u); err != nil {
+		return nil, err
+	}
+
+	return &u, nil
 }

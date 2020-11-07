@@ -31,3 +31,13 @@ func TestGetLabelsSeparator(t *testing.T) {
 		t.Errorf("TestGetLabelsSeparator failed, expected %s, got %s", expect, actual)
 	}
 }
+
+
+func TestFindAllImageLinks(t *testing.T) {
+	expect := strings.Join([]string{"image.jpg", "test/image.jpeg", "./test/image.jpg"}, ",")
+	actual := strings.Join(FindAllImageLinks("test message image.jpg test message, gitlab upload ![abc](/uploads/df1f/image.jpeg) " +
+		"and test/image.jpeg, .jpeg, and also ./test/image.jpg and no ![test](/uploads/a0940c63c191c97e471e0b6687da8ee6/test.png)"), ",")
+	if expect != actual {
+		t.Errorf("TestFindAllImageLinks failed, expected %s, got %s", expect, actual)
+	}
+}
