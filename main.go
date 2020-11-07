@@ -2,14 +2,15 @@ package main
 
 import (
 	log "github.com/sirupsen/logrus"
+	"github.com/spf13/afero"
 	"issue_maker/managers"
-	"os"
 	"runtime/debug"
 	"time"
 )
 
 func main() {
-	logFile, err := managers.GetFileLog()
+	fm := managers.NewFileManager(afero.NewOsFs())
+	logFile, err := fm.GetFileLog()
 	if err != nil {
 		managers.ErrorConsole.Println(err)
 		time.Sleep(time.Second * 5)
@@ -17,7 +18,7 @@ func main() {
 	}
 
 	initLogs(logFile)
-	req, err := managers.FileRead()
+	req, err := fm.FileRead()
 	if err != nil {
 		managers.ErrorConsole.Println(err)
 		log.WithFields(log.Fields{
@@ -27,8 +28,10 @@ func main() {
 		time.Sleep(time.Second * 5)
 		return
 	}
+	rm := managers.NewRestManager(req.ProjectId, req.AccessToken, fm)
+	im := managers.NewIssueManager(rm, fm, req)
 
-	milestones, err := managers.GetMilestones(req)
+	milestones, err := rm.GetMilestones()
 	if err != nil {
 		managers.ErrorConsole.Println(err)
 		log.WithFields(log.Fields{
@@ -53,7 +56,7 @@ func main() {
 		return
 	}
 
-	req, err = managers.Send(req)
+	req, err = im.Send()
 	if err != nil {
 		managers.ErrorConsole.Println(err)
 		log.WithFields(log.Fields{
@@ -63,7 +66,7 @@ func main() {
 		return
 	}
 
-	if err = managers.FileWrite(req); err != nil {
+	if err = fm.FileWrite(req); err != nil {
 		managers.ErrorConsole.Println(err)
 		log.WithFields(log.Fields{
 			"title":       "File write error",
@@ -75,7 +78,7 @@ func main() {
 	time.Sleep(time.Second * 5)
 }
 
-func initLogs(file *os.File) {
+func initLogs(file afero.File) {
 	log.SetOutput(file)
 	log.SetLevel(log.ErrorLevel)
 }

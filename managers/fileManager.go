@@ -2,8 +2,8 @@ package managers
 
 import (
 	"fmt"
+	"github.com/spf13/afero"
 	"gopkg.in/yaml.v2"
-	"io/ioutil"
 	"issue_maker/entities"
 	"os"
 	"time"
@@ -14,13 +14,21 @@ const fileWriteName = "done"
 const fileExtension = ".yaml"
 const fileLog = "issue_maker.log"
 
-func FileRead() (*entities.Request, error) {
-	fileName := fileReadName + fileExtension
-	if _, err := os.Stat(fileName); err != nil {
-		return nil, fmt.Errorf("файла %s в директории с проектом не найдено", fileName)
+type FileManager struct {
+	manager afero.Fs
+}
+
+func NewFileManager(fs afero.Fs) *FileManager {
+	return &FileManager{manager: fs}
+}
+
+func (fm *FileManager) FileRead() (*entities.Request, error) {
+	filePath := fileReadName + fileExtension
+	if _, err := fm.manager.Stat(filePath); err != nil {
+		return nil, fmt.Errorf("файла %s в директории с проектом не найдено", filePath)
 	}
 
-	data, err := ioutil.ReadFile(fileName)
+	data, err := afero.ReadFile(fm.manager, filePath)
 	if err != nil {
 		return nil, err
 	}
@@ -39,18 +47,14 @@ func FileRead() (*entities.Request, error) {
 	return &r, nil
 }
 
-func FileWrite(request *entities.Request) error {
+func (fm *FileManager) FileWrite(request *entities.Request) error {
 	fileName := fileWriteName + "_" + time.Now().Format("02-01-2006_15-04-05") + fileExtension
-	file, err := os.OpenFile(fileName, os.O_CREATE, 0777)
-	if err != nil {
-		return err
-	}
 	data, err := yaml.Marshal(request)
 	if err != nil {
 		return err
 	}
 
-	if _, err = file.Write(data); err != nil {
+	if err = afero.WriteFile(fm.manager, fileName, data, 0777); err != nil {
 		return err
 	}
 
@@ -58,18 +62,18 @@ func FileWrite(request *entities.Request) error {
 	return nil
 }
 
-func GetFileLog() (*os.File, error) {
-	return os.OpenFile(fileLog, os.O_CREATE|os.O_WRONLY|os.O_APPEND, 0666)
+func (fm *FileManager) GetFileLog() (afero.File, error) {
+	return fm.manager.OpenFile(fileLog, os.O_CREATE|os.O_WRONLY|os.O_APPEND, 0666)
 }
 
-func GetFile(str string) (*os.File, error) {
+func (fm *FileManager) GetFile(str string) (*os.File, error) {
 	return os.Open(str)
 }
 
-func CheckExistFiles(arr []string) bool {
+func (fm *FileManager) CheckExistFiles(arr []string) bool {
 	res := true
 	for _, s := range arr {
-		if _, err := os.Stat(s); err != nil {
+		if _, err := fm.manager.Stat(s); err != nil {
 			ErrorConsole.Printf("Файл %s не найден", s)
 			res = false
 		}
