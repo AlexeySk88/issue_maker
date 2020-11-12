@@ -18,5 +18,5 @@ test.png
 # vendor/
 
 # Project work files
-issues.*
+issues.yaml
 done_*

@@ -3,6 +3,7 @@ package main
 import (
 	log "github.com/sirupsen/logrus"
 	"github.com/spf13/afero"
+	"issue_maker/entities"
 	"issue_maker/managers"
 	"runtime/debug"
 	"time"
@@ -18,7 +19,7 @@ func main() {
 	}
 
 	initLogs(logFile)
-	req, err := fm.FileRead()
+	req, err := getRequest(fm)
 	if err != nil {
 		managers.ErrorConsole.Println(err)
 		log.WithFields(log.Fields{
@@ -66,7 +67,7 @@ func main() {
 		return
 	}
 
-	if err = fm.FileWrite(req); err != nil {
+	if err = fm.WriteDoneFile(req); err != nil {
 		managers.ErrorConsole.Println(err)
 		log.WithFields(log.Fields{
 			"title":       "File write error",
@@ -81,4 +82,17 @@ func main() {
 func initLogs(file afero.File) {
 	log.SetOutput(file)
 	log.SetLevel(log.ErrorLevel)
+}
+
+func getRequest(fm *managers.FileManager) (*entities.Request, error) {
+	req, err := fm.ReadIssuesFile()
+	if err != nil {
+		managers.ErrorConsole.Println(err)
+	} else {
+		return req, nil
+	}
+	managers.ErrorConsole.Printf("Введите путь к файлу с задачами: ")
+	reqPath := managers.ReadConsole()
+	return fm.ReadIssuesFileFromPath(reqPath)
+
 }

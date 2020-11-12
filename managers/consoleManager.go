@@ -31,6 +31,12 @@ func CheckRequest(request *entities.Request) error {
 	return nil
 }
 
+func ReadConsole() string {
+	var in string
+	fmt.Fscan(os.Stdin, &in)
+	return strings.TrimSpace(in)
+}
+
 func doPrint(request *entities.Request) {
 	var create []string
 	var update []string

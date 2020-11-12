@@ -6,6 +6,7 @@ import (
 	"gopkg.in/yaml.v2"
 	"issue_maker/entities"
 	"os"
+	"path/filepath"
 	"time"
 )
 
@@ -22,10 +23,22 @@ func NewFileManager(fs afero.Fs) *FileManager {
 	return &FileManager{manager: fs}
 }
 
-func (fm *FileManager) FileRead() (*entities.Request, error) {
+func (fm *FileManager) ReadIssuesFile() (*entities.Request, error) {
 	filePath := fileReadName + fileExtension
-	if _, err := fm.manager.Stat(filePath); err != nil {
-		return nil, fmt.Errorf("файла %s в директории с проектом не найдено", filePath)
+	if !fm.checkExistFile(filePath) {
+		ex, err := os.Executable()
+		if err != nil {
+			panic(err)
+		}
+		exPath := filepath.Dir(ex)
+		return nil, fmt.Errorf("файла %s в директории %s не найдено", filePath, exPath)
+	}
+	return fm.ReadIssuesFileFromPath(filePath)
+}
+
+func (fm *FileManager) ReadIssuesFileFromPath(filePath string) (*entities.Request, error) {
+	if !fm.checkExistFile(filePath) {
+		return nil, fmt.Errorf("файла %s не найдено", filePath)
 	}
 
 	data, err := afero.ReadFile(fm.manager, filePath)
@@ -47,7 +60,7 @@ func (fm *FileManager) FileRead() (*entities.Request, error) {
 	return &r, nil
 }
 
-func (fm *FileManager) FileWrite(request *entities.Request) error {
+func (fm *FileManager) WriteDoneFile(request *entities.Request) error {
 	fileName := fileWriteName + "_" + time.Now().Format("02-01-2006_15-04-05") + fileExtension
 	data, err := yaml.Marshal(request)
 	if err != nil {
@@ -73,10 +86,15 @@ func (fm *FileManager) GetFile(str string) (*os.File, error) {
 func (fm *FileManager) CheckExistFiles(arr []string) bool {
 	res := true
 	for _, s := range arr {
-		if _, err := fm.manager.Stat(s); err != nil {
-			ErrorConsole.Printf("Файл %s не найден", s)
+		if !fm.checkExistFile(s) {
+			ErrorConsole.Println("Файл %s не найден", s)
 			res = false
 		}
 	}
 	return res
+}
+
+func (fm *FileManager) checkExistFile(path string) bool {
+	_, err := fm.manager.Stat(path)
+	return err == nil
 }
