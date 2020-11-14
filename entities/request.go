@@ -46,7 +46,7 @@ func (r *Request) Validation() error {
 		if len(issue.Description) == 0 {
 			return fmt.Errorf("не заполнено поле 'description'")
 		}
-		if isMilestoneId && issue.milestoneIid == 0 {
+		if !isMilestoneId && len(issue.Milestone) == 0 {
 			return fmt.Errorf("не заполнено поле 'milestone_id'")
 		}
 	}

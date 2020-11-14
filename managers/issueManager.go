@@ -35,10 +35,10 @@ func (im *IssueManager) Send() (*entities.Request, error) {
 		var iid int
 		if issue.IsCreate() {
 			fmt.Printf("Записываю в gitlab задачу с заголовком: %s\n", issue.Title)
-			iid, err = im.rm.Create(im.r, index)
+			iid, err = im.rm.Create(im.r.RequestParam(index))
 		} else if issue.IsUpdate() {
 			fmt.Printf("Записываю в gitlab задачу с заголовком: %s\n", issue.Title)
-			iid, err = im.rm.Update(im.r, index)
+			iid, err = im.rm.Update(im.r.Issues[index].Id, im.r.RequestParam(index))
 		} else {
 			ErrorConsole.Printf("Задача с заголовком %s не будет отправлена в gitlab\n", issue.Title)
 			continue
@@ -62,7 +62,7 @@ func (im *IssueManager) descriptionUploadImage(desc string) (string, error) {
 
 	newDesc := desc
 	for _, imagePath := range links {
-		markdown, err := im.rm.UploadFile(imagePath, im.r.ProjectId, im.r.AccessToken)
+		markdown, err := im.rm.UploadFile(imagePath)
 		if err != nil {
 			return "", err
 		}

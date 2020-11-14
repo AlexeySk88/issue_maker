@@ -5,6 +5,7 @@ import (
 	"github.com/spf13/afero"
 	"issue_maker/entities"
 	"issue_maker/managers"
+	"net/http"
 	"runtime/debug"
 	"time"
 )
@@ -29,7 +30,7 @@ func main() {
 		time.Sleep(time.Second * 5)
 		return
 	}
-	rm := managers.NewRestManager(req.ProjectId, req.AccessToken, fm)
+	rm := managers.NewRestManager(req.ProjectId, req.AccessToken, &http.Client{}, fm)
 	im := managers.NewIssueManager(rm, fm, req)
 
 	milestones, err := rm.GetMilestones()
@@ -94,5 +95,4 @@ func getRequest(fm *managers.FileManager) (*entities.Request, error) {
 	managers.ErrorConsole.Printf("Введите путь к файлу с задачами: ")
 	reqPath := managers.ReadConsole()
 	return fm.ReadIssuesFileFromPath(reqPath)
-
 }

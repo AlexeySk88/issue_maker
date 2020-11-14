@@ -19,8 +19,13 @@ type RestManager struct {
 	fm          *FileManager
 }
 
-func NewRestManager(projectId int, accessToken string, fm *FileManager) *RestManager {
-	return &RestManager{projectId: projectId, accessToken: accessToken, client: &http.Client{}, fm: fm}
+func NewRestManager(projectId int, accessToken string, client *http.Client, fm *FileManager) *RestManager {
+	return &RestManager{
+		projectId:   projectId,
+		accessToken: accessToken,
+		client:      client,
+		fm:          fm,
+	}
 }
 
 func (rm *RestManager) GetMilestones() (*[]entities.Milestone, error) {
@@ -47,7 +52,7 @@ func (rm *RestManager) GetMilestones() (*[]entities.Milestone, error) {
 	return rm.responseMilestoneHandler(resp)
 }
 
-func (rm *RestManager) UploadFile(path string, projectId int, accessToken string) (string, error) {
+func (rm *RestManager) UploadFile(path string) (string, error) {
 	file, err := rm.fm.GetFile(path)
 	if err != nil {
 		return "", err
@@ -69,12 +74,12 @@ func (rm *RestManager) UploadFile(path string, projectId int, accessToken string
 
 	url := fmt.Sprintf("%s/%d/uploads",
 		baseUrl,
-		projectId)
+		rm.projectId)
 	req, err := http.NewRequest("POST", url, body)
 	if err != nil {
 		return "", nil
 	}
-	req.Header.Add("PRIVATE-TOKEN", accessToken)
+	req.Header.Add("PRIVATE-TOKEN", rm.accessToken)
 	req.Header.Set("Content-Type", writer.FormDataContentType())
 
 	resp, err := rm.client.Do(req)
@@ -90,12 +95,12 @@ func (rm *RestManager) UploadFile(path string, projectId int, accessToken string
 	return uploads.Markdown, nil
 }
 
-func (rm *RestManager) Create(request *entities.Request, index int) (int, error) {
+func (rm *RestManager) Create(param string) (int, error) {
 	url := fmt.Sprintf(
 		"%s/%d/issues?%s",
 		baseUrl,
 		rm.projectId,
-		request.RequestParam(index),
+		param,
 	)
 	req, err := http.NewRequest("POST", url, nil)
 	if err != nil {
@@ -104,13 +109,13 @@ func (rm *RestManager) Create(request *entities.Request, index int) (int, error)
 	return rm.send(req)
 }
 
-func (rm *RestManager) Update(request *entities.Request, index int) (int, error) {
+func (rm *RestManager) Update(id int, param string) (int, error) {
 	url := fmt.Sprintf(
 		"%s/%d/issues/%d?%s",
 		baseUrl,
 		rm.projectId,
-		request.Issues[index].Id,
-		request.RequestParam(index),
+		id,
+		param,
 	)
 	req, err := http.NewRequest("PUT", url, nil)
 	if err != nil {
