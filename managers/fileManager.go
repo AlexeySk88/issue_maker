@@ -61,7 +61,7 @@ func (fm *FileManager) ReadIssuesFileFromPath(filePath string) (*entities.Reques
 }
 
 func (fm *FileManager) WriteDoneFile(request *entities.Request) error {
-	fileName := fileWriteName + "_" + time.Now().Format("02-01-2006_15-04-05") + fileExtension
+	fileName := fm.getDoneFileName()
 	data, err := yaml.Marshal(request)
 	if err != nil {
 		return err
@@ -79,8 +79,8 @@ func (fm *FileManager) GetFileLog() (afero.File, error) {
 	return fm.manager.OpenFile(fileLog, os.O_CREATE|os.O_WRONLY|os.O_APPEND, 0666)
 }
 
-func (fm *FileManager) GetFile(str string) (*os.File, error) {
-	return os.Open(str)
+func (fm *FileManager) GetFile(str string) (afero.File, error) {
+	return fm.manager.Open(str)
 }
 
 func (fm *FileManager) CheckExistFiles(arr []string) bool {
@@ -97,4 +97,8 @@ func (fm *FileManager) CheckExistFiles(arr []string) bool {
 func (fm *FileManager) checkExistFile(path string) bool {
 	_, err := fm.manager.Stat(path)
 	return err == nil
+}
+
+func (fm *FileManager) getDoneFileName() string {
+	return fileWriteName + "_" + time.Now().Format("02-01-2006_15-04-05") + fileExtension
 }

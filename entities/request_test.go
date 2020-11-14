@@ -1,6 +1,7 @@
 package entities
 
 import (
+	"github.com/stretchr/testify/require"
 	"issue_maker/helpers"
 	"strings"
 	"testing"
@@ -28,22 +29,18 @@ func TestRequestParam(t *testing.T) {
 	}
 
 	param := r.RequestParam(0)
-	if !strings.Contains(param, "labels=label+1") ||
-		!strings.Contains(param, "weight=1") ||
-		!strings.Contains(param, "milestone_id=123") ||
-		!strings.Contains(param, "title=title+1") ||
-		!strings.Contains(param, "description=desc-1") {
-		t.Errorf("TestRequestParam failed, got %s", param)
-	}
+	require.True(t, strings.Contains(param, "labels=label+1"))
+	require.True(t, strings.Contains(param, "weight=1"))
+	require.True(t, strings.Contains(param, "milestone_id=123"))
+	require.True(t, strings.Contains(param, "title=title+1"))
+	require.True(t, strings.Contains(param, "description=desc-1"))
 
 	param = r.RequestParam(1)
-	if !strings.Contains(param, "title=title-2") ||
-		!strings.Contains(param, "description=desc+2") ||
-		!strings.Contains(param, "labels=label+3,label+4") ||
-		!strings.Contains(param, "weight=2") ||
-		!strings.Contains(param, "milestone_id=321") {
-		t.Errorf("TestRequestParam failed, got %s", param)
-	}
+	require.True(t, strings.Contains(param, "title=title-2"))
+	require.True(t, strings.Contains(param, "description=desc+2"))
+	require.True(t, strings.Contains(param, "labels=label+3,label+4"))
+	require.True(t, strings.Contains(param, "weight=2"))
+	require.True(t, strings.Contains(param, "milestone_id=321"))
 }
 
 func TestIsCreateAndIsUpdate(t *testing.T) {
@@ -53,19 +50,12 @@ func TestIsCreateAndIsUpdate(t *testing.T) {
 		Labels:      []string{"label1", "label2"},
 		Weight:      1,
 	}
-
-	isCreate := i.IsCreate()
-	isUpdate := i.IsUpdate()
-	if !isCreate && isUpdate {
-		t.Errorf("TestIsCreateAndIsUpdate failed, expected create - %t and update - %t, got %t and %t", isCreate, isUpdate, true, false)
-	}
+	require.True(t, i.IsCreate())
+	require.False(t, i.IsUpdate())
 
 	i.Id = 123
-	isCreate = i.IsCreate()
-	isUpdate = i.IsUpdate()
-	if isCreate && !isUpdate {
-		t.Errorf("TestIsCreateAndIsUpdate failed, expected create - %t and update - %t, got %t and %t", isCreate, isUpdate, false, true)
-	}
+	require.False(t, i.IsCreate())
+	require.True(t, i.IsUpdate())
 }
 
 func TestCopyForWrite(t *testing.T) {
@@ -78,15 +68,12 @@ func TestCopyForWrite(t *testing.T) {
 		Weight:       2,
 	}
 	iCopy := i.CopyForWrite(123)
-
-	res := &i == iCopy
-	if res {
-		t.Errorf("CopyForWrite failed, expected %t, got %t", false, res)
-	}
-
-	res = iCopy.Id != 123 || iCopy.Title != i.Title || iCopy.Description != i.Description || iCopy.Weight != i.Weight ||
-		iCopy.Milestone != i.Milestone || iCopy.milestoneIid != 0 || !helpers.ArrayEquals(iCopy.Labels, i.Labels)
-	if res {
-		t.Errorf("CopyForWrite failed, expected %t, got %t", false, res)
-	}
+	require.False(t, &i == iCopy)
+	require.True(t, iCopy.Id == 123)
+	require.True(t, iCopy.Title == i.Title)
+	require.True(t, iCopy.Description == i.Description)
+	require.True(t, iCopy.Weight == i.Weight)
+	require.True(t, iCopy.Milestone == i.Milestone)
+	require.True(t, iCopy.milestoneIid == 0)
+	require.True(t, helpers.ArrayEquals(iCopy.Labels, i.Labels))
 }

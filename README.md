@@ -1,3 +1,4 @@
+<a href='https://github.com/jpoles1/gopherbadger' target='_blank'>![gopherbadger-tag-do-not-edit](https://img.shields.io/badge/Go%20Coverage-30%25-brightgreen.svg?longCache=true&style=flat)</a>
 # Issue Maker
 Проект создан для автоматического добавления задач ([issues](https://docs.gitlab.com/ee/user/project/issues/)) для gitlab
 
