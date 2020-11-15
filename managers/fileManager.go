@@ -16,7 +16,8 @@ const fileExtension = ".yaml"
 const fileLog = "issue_maker.log"
 
 type FileManager struct {
-	manager afero.Fs
+	manager  afero.Fs
+	basePath string
 }
 
 func NewFileManager(fs afero.Fs) *FileManager {
@@ -33,10 +34,12 @@ func (fm *FileManager) ReadIssuesFile() (*entities.Request, error) {
 		exPath := filepath.Dir(ex)
 		return nil, fmt.Errorf("файла %s в директории %s не найдено", filePath, exPath)
 	}
-	return fm.ReadIssuesFileFromPath(filePath)
+	return fm.ReadIssuesFileFromPath(".")
 }
 
-func (fm *FileManager) ReadIssuesFileFromPath(filePath string) (*entities.Request, error) {
+func (fm *FileManager) ReadIssuesFileFromPath(path string) (*entities.Request, error) {
+	fm.basePath = path + afero.FilePathSeparator
+	filePath := fm.basePath + fileReadName + fileExtension
 	if !fm.checkExistFile(filePath) {
 		return nil, fmt.Errorf("файла %s не найдено", filePath)
 	}
@@ -83,11 +86,12 @@ func (fm *FileManager) GetFile(str string) (afero.File, error) {
 	return fm.manager.Open(str)
 }
 
-func (fm *FileManager) CheckExistFiles(arr []string) bool {
+func (fm *FileManager) CheckExistFilesInBasePath(arr []string) bool {
 	res := true
 	for _, s := range arr {
-		if !fm.checkExistFile(s) {
-			ErrorConsole.Println("Файл %s не найден", s)
+		filePath := fm.basePath + s
+		if !fm.checkExistFile(filePath) {
+			ErrorConsole.Println("Файл %s не найден", filePath)
 			res = false
 		}
 	}

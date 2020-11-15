@@ -5,7 +5,6 @@ import (
 	"github.com/gookit/color"
 	"issue_maker/entities"
 	"issue_maker/helpers"
-	"os"
 	"strings"
 )
 
@@ -16,11 +15,21 @@ var ErrorConsole = color.New(color.FgRed)
 var InfoConsole = color.New(color.FgGreen)
 var WarnConsole = color.New(color.FgYellow)
 
-func CheckRequest(request *entities.Request) error {
-	doPrint(request)
+type ConsoleManager struct {
+	scan Scan
+}
+
+type Scan func() (string, error)
+
+func NewConsoleManager(s Scan) *ConsoleManager {
+	return &ConsoleManager{scan: s}
+}
+
+func (cm *ConsoleManager) CheckRequest(request *entities.Request) error {
+	cm.doPrint(request)
 	fmt.Print("Начать запись в gitlab? (y/n): ")
-	var userResponse string
-	if _, err := fmt.Fscan(os.Stdin, &userResponse); err != nil {
+	userResponse, err := cm.scan()
+	if err != nil {
 		return fmt.Errorf("ошибка ввода, запись в gitlab не совершена")
 	}
 
@@ -31,13 +40,12 @@ func CheckRequest(request *entities.Request) error {
 	return nil
 }
 
-func ReadConsole() string {
-	var in string
-	fmt.Fscan(os.Stdin, &in)
-	return strings.TrimSpace(in)
+func (cm *ConsoleManager) ReadConsole() string {
+	input, _ := cm.scan()
+	return strings.TrimSpace(input)
 }
 
-func doPrint(request *entities.Request) {
+func  (cm *ConsoleManager) doPrint(request *entities.Request) {
 	var create []string
 	var update []string
 	var unknown []string

@@ -31,6 +31,28 @@ func TestRestManager_GetMilestones(t *testing.T) {
 	require.Equal(t, "11.0", m[1].Title)
 }
 
+func TestRestManager_GetMilestonesError(t *testing.T) {
+	client := newTestClient(func(req *http.Request) *http.Response {
+		return &http.Response{
+			StatusCode: 500,
+			Body:       ioutil.NopCloser(bytes.NewBufferString("")),
+			Header:     make(http.Header),
+		}
+	})
+	_, err := getRestManager(client).GetMilestones()
+	require.Error(t, err)
+
+	client = newTestClient(func(req *http.Request) *http.Response {
+		return &http.Response{
+			StatusCode: 200,
+			Body:       ioutil.NopCloser(bytes.NewBufferString("")),
+			Header:     make(http.Header),
+		}
+	})
+	_, err = getRestManager(client).GetMilestones()
+	require.Error(t, err)
+}
+
 func TestRestManager_UploadFile(t *testing.T) {
 	client := newTestClient(func(req *http.Request) *http.Response {
 		return &http.Response{

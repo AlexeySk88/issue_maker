@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	log "github.com/sirupsen/logrus"
 	"github.com/spf13/afero"
 	"issue_maker/entities"
@@ -11,6 +12,12 @@ import (
 )
 
 func main() {
+	cm := managers.NewConsoleManager(func() (string, error) {
+		var str string
+		_, err := fmt.Scan(&str)
+		return str, err
+	})
+
 	fm := managers.NewFileManager(afero.NewOsFs())
 	logFile, err := fm.GetFileLog()
 	if err != nil {
@@ -20,7 +27,7 @@ func main() {
 	}
 
 	initLogs(logFile)
-	req, err := getRequest(fm)
+	req, err := getRequest(fm, cm)
 	if err != nil {
 		managers.ErrorConsole.Println(err)
 		log.WithFields(log.Fields{
@@ -52,7 +59,7 @@ func main() {
 		return
 	}
 
-	if err = managers.CheckRequest(req); err != nil {
+	if err = cm.CheckRequest(req); err != nil {
 		managers.ErrorConsole.Println(err)
 		time.Sleep(time.Second * 5)
 		return
@@ -85,7 +92,7 @@ func initLogs(file afero.File) {
 	log.SetLevel(log.ErrorLevel)
 }
 
-func getRequest(fm *managers.FileManager) (*entities.Request, error) {
+func getRequest(fm *managers.FileManager, cm *managers.ConsoleManager) (*entities.Request, error) {
 	req, err := fm.ReadIssuesFile()
 	if err != nil {
 		managers.ErrorConsole.Println(err)
@@ -93,6 +100,6 @@ func getRequest(fm *managers.FileManager) (*entities.Request, error) {
 		return req, nil
 	}
 	managers.ErrorConsole.Printf("Введите путь к файлу с задачами: ")
-	reqPath := managers.ReadConsole()
+	reqPath := cm.ReadConsole()
 	return fm.ReadIssuesFileFromPath(reqPath)
 }

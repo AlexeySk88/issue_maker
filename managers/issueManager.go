@@ -56,12 +56,13 @@ func (im *IssueManager) Send() (*entities.Request, error) {
 
 func (im *IssueManager) descriptionUploadImage(desc string) (string, error) {
 	links := helpers.FindAllImageLinks(desc)
-	if !im.fm.CheckExistFiles(links) {
+	if !im.fm.CheckExistFilesInBasePath(links) {
 		return "", fmt.Errorf("найдены не все изображения")
 	}
 
 	newDesc := desc
-	for _, imagePath := range links {
+	for _, imageName := range links {
+		imagePath := im.fm.basePath + imageName
 		markdown, err := im.rm.UploadFile(imagePath)
 		if err != nil {
 			return "", err

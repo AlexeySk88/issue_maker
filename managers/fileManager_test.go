@@ -3,13 +3,17 @@ package managers
 import (
 	"github.com/spf13/afero"
 	"github.com/stretchr/testify/require"
+	"strings"
 	"testing"
 )
 
 var fm = NewFileManager(afero.NewMemMapFs())
 
 func TestFileManager_ReadIssuesFile(t *testing.T) {
-	err := afero.WriteFile(fm.manager, "issues.yaml", []byte(getDataYaml()), 0666)
+	_, err := fm.ReadIssuesFile()
+	require.Error(t, err)
+
+	err = afero.WriteFile(fm.manager, "issues.yaml", []byte(getDataYaml()), 0666)
 	require.NoError(t, err)
 
 	req, err := fm.ReadIssuesFile()
@@ -31,6 +35,24 @@ func TestFileManager_ReadIssuesFile(t *testing.T) {
 	require.True(t, i2.Labels[0] == "lab5")
 	require.True(t, i2.Milestone == "my-milestone")
 	require.True(t, i2.Weight == 1)
+
+	_ = fm.manager.Remove("issues.yaml")
+}
+
+func TestFileManager_ReadIssuesFileFromPath(t *testing.T) {
+	_, err := fm.ReadIssuesFileFromPath(".")
+	require.Error(t, err)
+
+	_ = afero.WriteFile(fm.manager, "issues.yaml", []byte("test message"), 0666)
+	_, err = fm.ReadIssuesFileFromPath(".")
+	require.Error(t, err)
+
+	noValidIssues := strings.Replace(getDataYaml(), "project_id: 321123", "", 1)
+	_ = afero.WriteFile(fm.manager, "issues.yaml", []byte(noValidIssues), 0666)
+	_, err = fm.ReadIssuesFileFromPath(".")
+	require.Error(t, err)
+
+	_ = fm.manager.Remove("issues.yaml")
 }
 
 func TestFileManager_CheckExistFiles(t *testing.T) {
@@ -40,9 +62,9 @@ func TestFileManager_CheckExistFiles(t *testing.T) {
 		require.NoError(t, err)
 	}
 
-	require.True(t, fm.CheckExistFiles(arr))
+	require.True(t, fm.CheckExistFilesInBasePath(arr))
 	arr = append(arr, "file3.txt")
-	require.False(t, fm.CheckExistFiles(arr))
+	require.False(t, fm.CheckExistFilesInBasePath(arr))
 }
 
 func TestFileManager_GetFileLog(t *testing.T) {
@@ -59,6 +81,27 @@ func TestFileManager_GetFile(t *testing.T) {
 	file, err := fm.GetFile(fileName)
 	require.NoError(t, err)
 	require.True(t, file.Name() == fileName)
+}
+
+func TestFileManager_WriteDoneFile(t *testing.T) {
+	doneIsExist := checkDoneFile()
+	require.False(t, doneIsExist)
+
+	err := fm.WriteDoneFile(getRequest())
+	require.NoError(t, err)
+
+	doneIsExist = checkDoneFile()
+	require.True(t, doneIsExist)
+}
+
+func checkDoneFile() bool {
+	files, _ := afero.ReadDir(fm.manager, "./")
+	for _, file := range files {
+		if strings.Contains(file.Name(), "done") {
+			return true
+		}
+	}
+	return false
 }
 
 func getDataYaml() string {
