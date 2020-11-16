@@ -21,7 +21,7 @@ type FileManager struct {
 }
 
 func NewFileManager(fs afero.Fs) *FileManager {
-	return &FileManager{manager: fs}
+	return &FileManager{manager: fs, basePath: ""}
 }
 
 func (fm *FileManager) ReadIssuesFile() (*entities.Request, error) {
@@ -104,5 +104,5 @@ func (fm *FileManager) checkExistFile(path string) bool {
 }
 
 func (fm *FileManager) getDoneFileName() string {
-	return fileWriteName + "_" + time.Now().Format("02-01-2006_15-04-05") + fileExtension
+	return fm.basePath + fileWriteName + "_" + time.Now().Format("02-01-2006_15-04-05") + fileExtension
 }

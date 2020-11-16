@@ -67,7 +67,7 @@ func (im *IssueManager) descriptionUploadImage(desc string) (string, error) {
 		if err != nil {
 			return "", err
 		}
-		newDesc = strings.ReplaceAll(newDesc, imagePath, markdown)
+		newDesc = strings.ReplaceAll(newDesc, imageName, markdown)
 	}
 
 	return newDesc, nil
